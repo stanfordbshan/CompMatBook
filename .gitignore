@@ -1,0 +1,9 @@
+# 忽略所有文件
+*.lammps
+
+# 忽略名为 debug 的文件夹
+debug/
+
+# 忽略根目录下的 config.json 文件
+/config.json
+
