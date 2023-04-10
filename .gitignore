@@ -1,5 +1,7 @@
 # 忽略所有文件
 *.lammps
+*.lammpstrj
+dump.*
 
 # 忽略名为 debug 的文件夹
 debug/
