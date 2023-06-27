@@ -20,6 +20,8 @@ Computational Materials Science(Book)
 
 
 # 第七章
+7.3
+7.4 
 
 # 第八章
 
