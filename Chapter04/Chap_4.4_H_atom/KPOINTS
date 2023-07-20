@@ -1,0 +1,5 @@
+K-POINTS    #  comment line
+0                  # automatic k-points generation
+Gamma        #  gamma centered
+1 1 1           #  1*1*1
+0 0 0           #  x y z shifts, commonly 0 0 0 
