@@ -1,0 +1,8 @@
+O atom in a box
+ 1.0          ! universal scaling parameters
+ 8.0 0.0 0.0  ! lattice vector  a(1)
+ 0.0 8.01 0.0  ! lattice vector  a(2)
+ 0.0 0.0 8.02 ! lattice vector  a(3)
+1             ! number of atoms
+cart          ! positions in cartesian coordinates
+ 0 0 0
