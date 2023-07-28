@@ -1,0 +1,73 @@
+# Crack simulation
+dimension 3
+units metal
+boundary s s p
+atom_style atomic
+
+# Create geometry
+lattice fcc 3.52
+region box block 0 100 0 30 -5 5
+create_box 5 box
+create_atoms 1 box
+
+# Set mass for atom types
+mass 1 58.69
+mass 2 58.69
+mass 3 58.69
+mass 4 58.69
+mass 5 58.69
+
+# EAM potentials
+pair_style eam
+pair_coeff * * Ni_u3.eam
+
+# Define groups
+region 1 block INF INF INF 1.25 INF INF
+group lower region 1
+region 2 block INF INF 28.75 INF INF INF
+group upper region 2
+group boundary union lower upper
+group mobile subtract all boundary
+
+region leftupper block INF 20 15 INF INF INF
+region leftlower block INF 20 INF 15 INF INF
+group leftupper region leftupper
+group leftlower region leftlower
+
+# Set atom types
+set group leftupper type 2
+set group leftlower type 3
+set group lower type 4
+set group upper type 5
+
+# Compute stress and Voronoi volume
+compute s all stress/atom NULL
+compute vol all voronoi/atom
+variable von_press atom sqrt(0.5*((c_s[1]-c_s[2])^2+(c_s[1]-c_s[3])^2+(c_s[2]-c_s[3])^2+6*(c_s[4]^2+c_s[5]^2+c_s[6]^2)))/10000/c_vol[1]
+
+# Variables for strain and stress
+variable l equal ly
+variable len equal ${l}
+variable strain equal (ly-v_len)/v_len
+variable stress equal -pyy/10000 #convert from bar to GPa
+
+# Initial velocities
+compute new mobile temp
+velocity mobile create 1 887723 temp new
+velocity upper set 0.0 0.1 0.0
+velocity mobile ramp vy 0 0.1 y 1.25 28.75 sum yes
+
+# Fixes
+fix 1 all nve
+fix 2 boundary setforce NULL 0.0 0.0
+
+# Run simulation
+timestep 0.001
+thermo 1000
+thermo_modify temp new
+neigh_modify exclude type 2 3
+
+# Output
+dump 1 mobile custom 1000 dump.crack id type x y z v_von_press
+fix 3 all ave/time 5 40 1000 v_strain v_stress  file ori.crack
+run 100000
