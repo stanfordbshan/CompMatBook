@@ -1,0 +1,8 @@
+ SYSTEM = O2 in a box
+ ICHARG = 12
+ ISMEAR = 0  ! Gaussian smearing
+ SIGMA  = 0.01
+ ISPIN =  2  ! spin polarized calculation
+ MAGMOM = 2.0 2.0
+ NSW = 0    ! do NOT relax
+ IBRION = 2 ! use the conjugate gradient algorithm
