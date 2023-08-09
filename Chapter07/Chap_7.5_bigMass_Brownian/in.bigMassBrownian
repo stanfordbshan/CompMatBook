@@ -1,0 +1,40 @@
+variable T index 0.25 0.5 0.75 1
+units lj
+dimension 2
+atom_style atomic
+boundary p p p
+
+neighbor 6 bin
+neigh_modify every 1 delay 0 check yes
+region simbox block -40 40 -40 40 -0.1 0.1
+create_box 2 simbox
+fix 2d all enforce2d
+
+# create atoms
+variable npart equal 3200  #number of atoms
+create_atoms 1 random ${npart} 324523 simbox
+create_atoms 2 single 0 0 0
+mass 1 1
+mass 2 200
+
+# specify interatomic potential
+pair_style soft 1.0
+pair_coeff 1 1 10.0 1.0
+pair_coeff 1 2 10.0 5.0
+pair_coeff 2 2 10.0 5.0
+
+# loop from very beginning
+velocity all create ${T} 34234123 dist gaussian
+minimize 1e-4 1e-4 1000 1000
+reset_timestep 0
+
+dump 1 all custom 1000 dump.lammpstrj_${T} id type x y z
+
+fix 1 all nvt temp ${T} ${T} 1
+thermo_style custom step temp ke pe
+thermo 1000
+run 500000
+
+next T
+clear
+jump in.bigMassBrownian
