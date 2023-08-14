@@ -1,0 +1,39 @@
+# This input script is used to calculate
+# the thermal expansion of copper.
+
+variable T index 300 400 500 600 700 800 900 1000
+
+label T_loop
+units           metal
+boundary        p p p
+atom_style      atomic
+
+# 创建晶胞
+lattice			fcc 3.62
+region			box block 0 8 0 8 0 8
+create_box		1 box
+create_atoms 	1 box
+
+# 设置力场势参数
+pair_style      eam
+pair_coeff      1 1 Cu_u3.eam
+
+
+# 平衡
+reset_timestep 0
+velocity all create ${T} 87287 dist gaussian
+fix 1 all npt temp ${T} ${T} $(100*dt) iso 0 0 1
+thermo_style custom step temp epair press lx ly lz
+thermo 1000
+
+compute actual_T all temp
+variable Lx equal lx
+variable V equal vol
+
+fix 2 all ave/time 100 10 10000 c_actual_T v_Lx v_V file data.${T}
+run 10000
+unfix 1
+
+clear
+next T
+jump SELF T_loop
