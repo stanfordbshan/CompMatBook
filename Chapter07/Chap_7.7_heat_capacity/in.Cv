@@ -1,0 +1,53 @@
+# ©️ Copyright 2023 @ Authors
+# 作者：斯坦福大厨 📨
+# 日期：2023-09-28
+# 共享协议：本作品采用知识共享署名-非商业性使用-相同方式共享 4.0 国际许可协议进行许可。
+# 恭喜您已经发现了这份神奇的计算材料学课件！这份课件是我在熬夜吃掉不计其数的披萨和咖啡后创作出来的，配套的教材是由单斌、陈征征、陈蓉合著的《计算材料学--从算法原理到代码实现》。
+# 学习资料合集您可以在这个网址找到：www.materialssimulation.com/book，您也可以跟着up主无人问津晦涩难懂的B站视频一起进行学习。希望它能帮您在计算材料学的道路上摔得不那么痛。
+# 就像您尊重那些一边烘焙披萨一边写代码的大厨一样，当您使用这份课件时，请：
+# 记得告诉大家这份课件是斯坦福大厨写的，并且他在华中科技大学微纳中心工作
+# 别用它去赚大钱，这个课件是用来学习的，不是用来买披萨的
+# 保持开放共享的精神
+# 如果你有关于计算材料学的想法，或者你只是想和我讨论最好吃的披萨口味，欢迎通过邮件 bshan@mail.hust.edu.cn 联系我。
+
+# Initialization
+units metal
+boundary p p p
+atom_style atomic
+
+variable Tstart equal 10.0
+variable Tstop equal 1000
+variable Tdamp equal 0.2
+
+# Cu lattice parameter
+lattice fcc 3.62 
+region simbox block 0 8 0 8 0 8
+create_box 1 simbox
+create_atoms 1 box
+
+# Cu potential
+pair_style eam
+pair_coeff 1 1 Cu_u3.eam
+
+# Define compute for temperature
+#compute all_temp all temp
+velocity all create ${Tstart} 825577 dist gaussian
+
+# Equilibration steps
+fix 1 all nvt temp ${Tstart} ${Tstart} ${Tdamp}
+thermo       100
+run          5000
+unfix 1
+
+# Define thermo output
+reset_timestep 0
+thermo 1000
+thermo_style custom step temp pe etotal 
+
+# Gradually heat the system
+print "Production steps started!"
+fix             2 all nvt temp ${Tstart} ${Tstop} ${Tdamp}
+run             120000
+
+# End
+print "Simulation complete!"
