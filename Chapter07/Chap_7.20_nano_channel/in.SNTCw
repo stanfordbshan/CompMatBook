@@ -1,0 +1,175 @@
+
+
+#General Settings
+units         real
+boundary      p p p
+atom_style    full
+read_data     data.snt30-w
+neighbor      4.5 bin
+neigh_modify  delay  5
+kspace_style  pppm 0.0001
+variable T equal 320
+timestep 0.5
+
+#Bond Parameters
+bond_style     harmonic
+bond_coeff  1 450.00 1.0 # Ow-Hw
+
+#Angle Parameters
+angle_style  harmonic
+angle_coeff     1 55.0000 109.47 # Hw-Ow-Hws
+
+#Non-bonded Interaction Parameters
+pair_style  hybrid lj/class2/coul/long 10 lj/cut/coul/long 10.0
+pair_coeff    1  1 lj/class2/coul/long  0.0000      0.0000  #tube interaction ignored
+pair_coeff    1  2 lj/class2/coul/long  0.0000      0.0000  #tube interaction ignored
+pair_coeff    1  3 lj/class2/coul/long  0.1310      4.290  #Si-Si in chain
+pair_coeff    1  4 lj/cut/coul/long 0.1596      3.830  #Si-CH3
+pair_coeff    1  5 lj/cut/coul/long  0.1093      3.930  #Si-CH2
+pair_coeff    1  6 lj/cut/coul/long  0.0000      0.000  #Si-Cbw
+pair_coeff    1  7 lj/cut/coul/long  0.0000      0.000  #Si-Ctw
+pair_coeff    1  8 lj/cut/coul/long  0.0000      0.000  #Si-Ccap
+pair_coeff    1  9 lj/cut/coul/long  0.1423      3.319  #Si-Ow
+pair_coeff    1 10 lj/cut/coul/long  0.0000      0.000  #Si-Hw
+
+
+pair_coeff    2  2 lj/class2/coul/long  0 0  #tube interaction ignored
+pair_coeff    2  3 lj/class2/coul/long  0.0772      3.940  #O-Si
+pair_coeff    2  4 lj/cut/coul/long  0.1247      3.380  #O-CH3
+pair_coeff    2  5 lj/cut/coul/long  0.0854      3.480  #O-CH2
+pair_coeff    2  6 lj/cut/coul/long  0.0000      0.000  #O-Cbw
+pair_coeff    2  7 lj/cut/coul/long  0.0000      0.000  #O-Ctw
+pair_coeff    2  8 lj/cut/coul/long  0.0000      0.000  #O-Ccap
+pair_coeff    2  9 lj/cut/coul/long  0.0455      3.319  #O-Ow
+pair_coeff    2 10 lj/cut/coul/long  0.0000      0.000  #O-Hw
+
+pair_coeff    3  3 lj/class2/coul/long  0.1310      4.290  #Si-Si
+pair_coeff    3  4 lj/cut/coul/long  0.1596      3.830  #Si-CH3
+pair_coeff    3  5 lj/cut/coul/long  0.1093      3.930  #Si-CH2
+pair_coeff    3  6 lj/cut/coul/long  0.0000      0.000  #Si-Cbw
+pair_coeff    3  7 lj/cut/coul/long  0.0000      0.000  #Si-Ctw
+pair_coeff    3  8 lj/cut/coul/long  0.0000      0.000  #Si-Ccap
+pair_coeff    3  9 lj/cut/coul/long  0.1426      3.725  #Si-Ow
+pair_coeff    3 10 lj/cut/coul/long  0.0000      0.000  #Si-Hw
+
+pair_coeff    4  4 lj/cut/coul/long  0.1947      3.750  #CH3-CH3
+pair_coeff    4  5 lj/cut/coul/long  0.1377      3.850  #CH2-CH3
+pair_coeff    4  6 lj/cut/coul/long  0.0000      0.000  #CH2-Cbw
+pair_coeff    4  7 lj/cut/coul/long  0.0000      0.000  #CH2-Ctw
+pair_coeff    4  8 lj/cut/coul/long  0.0000      0.000  #CH2-Ccap
+pair_coeff    4  9 lj/cut/coul/long  0.1739      3.458  #CH2-Ow
+pair_coeff    4 10 lj/cut/coul/long  0.0000      0.000  #CH2-Hw
+
+pair_coeff    5  5 lj/cut/coul/long  0.0974      3.950  #CH2-CH2
+pair_coeff    5  6 lj/cut/coul/long  0.0000      0.000  #CH2-Cbw
+pair_coeff    5  7 lj/cut/coul/long  0.0000      0.000  #CH2-Ctw
+pair_coeff    5  8 lj/cut/coul/long  0.0000      0.000  #CH2-Ccap
+pair_coeff    5  9 lj/cut/coul/long  0.1230      3.558  #CH2-Ow
+pair_coeff    5 10 lj/cut/coul/long  0.0000      0.000  #CH2-Hw
+
+pair_coeff    6  6 lj/cut/coul/long  0.0000      0.000  #Cbw-Cbw
+pair_coeff    6  7 lj/cut/coul/long  0.0000      0.000  #Cbw-Ctw
+pair_coeff    6  8 lj/cut/coul/long  0.0000      0.000  #Cbw-Ccap
+pair_coeff    6  9 lj/cut/coul/long  0.1553      3.166  #Cbw-Ow
+pair_coeff    6 10 lj/cut/coul/long  0.0000      0.000  #Cbw-Hw
+
+pair_coeff    7  7 lj/cut/coul/long  0.0000      0.000  #Ctw-Ctw
+pair_coeff    7  8 lj/cut/coul/long  0.0000      0.000  #Ctw-Ccap
+pair_coeff    7  9 lj/cut/coul/long  0.1553      3.166  #Ctw-Ow
+pair_coeff    7 10 lj/cut/coul/long  0.0000      0.000  #Cbt-Hw
+
+pair_coeff    8  8 lj/cut/coul/long  0.0000      0.000  #Ccap-Ccap
+pair_coeff    8  9 lj/cut/coul/long  0.1553      3.166  #Ccap-Ow
+pair_coeff    8 10 lj/cut/coul/long  0.0000      0.000  #Ccap-Hw
+
+pair_coeff    9  9 lj/cut/coul/long  0.1553      3.166  #Ow-Ow
+pair_coeff    9 10 lj/cut/coul/long  0.0000      0.000  #Ow-Hw
+
+pair_coeff   10 10 lj/cut/coul/long  0.0000      0.000  #Hw-Hw
+
+
+
+#Mass Setting
+mass		1 	28.0855 #Si
+mass		2 	15.9994 #O
+mass            3 	28.0855 #Si in chain
+mass            4 	15.1048 #CH3
+mass            5       14.0969 #CH2
+mass            6       12.081  #C bot
+mass            7       12.081  #C up
+mass            8       12.081  #C block
+mass            9       15.9994 #Ow
+mass           10       1.008   #Hw
+
+#Charge Correction
+set type 2 charge -0.0506329113924051
+set type 9 charge -0.8476
+set type 10 charge 0.4238
+
+#Assigning Groups 
+group	        SiO type 1 2 
+group           bw molecule 3
+group           tw molecule 4
+group           cap molecule 5
+group           Water type 9 10
+group           WaterO type 9
+
+
+#Monitoring Temperature
+compute  TWater  Water temp
+thermo_style  custom  step c_Tpolymer c_TWater ke pe press
+thermo  1000
+
+#rigid SNT
+fix r1 SiO setforce 0.0 0.0 0.0
+fix r2 bw setforce 0.0 0.0 0.0
+fix r3 tw setforce 0.0 0.0 0.0
+fix r4 cap setforce 0.0 0.0 0.0
+
+minimize 0.0 1.0e-8 10000 100000
+reset_timestep 0
+
+
+#NVT Relaxation
+fix watershake Water  shake 0.0001 100 0 b 1 a 1
+fix 2 Water nvt temp $T $T 50
+dump trajectory all custom 100000 NVTRelax.dump id type x y z vx vy vz
+
+run 4000000
+undump trajectory
+reset_timestep 0
+
+#Adjust Z-coordinate of Piston
+unfix r3
+fix r3 tw setforce 0.0 0.0 NULL
+fix 3 tw rigid single
+dump trajectory all custom 100000 AdjustPiston.dump id type x y z vx vy vz
+run  1000000
+undump trajectory
+reset_timestep 0
+
+unfix 3
+unfix r3
+fix r3 tw setforce 0.0 0.0 0.0
+
+#"Open" the Nanopore
+unfix r4
+delete_atoms group cap
+dump trajectory all custom 100000 Open.dump id type x y z vx vy vz
+run  500000
+undump trajectory
+reset_timestep 0
+
+#Infiltration and Outflow
+region waterin cylinder z 0 0 15.6795 0 119.544 units box
+group waterinside dynamic Water region waterin every 1
+dump waterin waterinside custom 10000 Waterinside.dump id type x y z vx vy vz
+
+fix OutputP all ave/time 1 1000 1000 f_r3[1] f_r3[2] f_r3[3] &
+file force.dat
+fix 6 tw move linear 0.0 0.0 -0.000005 units box
+
+run 8000000
+
+fix 6 tw move linear 0.0 0.0 0.000005 units box
+run 8000000
