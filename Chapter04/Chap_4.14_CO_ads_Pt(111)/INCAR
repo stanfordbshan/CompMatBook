@@ -1,0 +1,8 @@
+ISMEAR   =  1
+SIGMA    =  0.2
+ENCUT    =  400
+IBRION   =  2
+NSW      =  60
+ISIF     =  2
+LWAVE    =  False
+LCHARG   =  False
