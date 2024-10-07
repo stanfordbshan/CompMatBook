@@ -1,0 +1,71 @@
+# Initialization
+units metal
+boundary p p p
+atom_style atomic
+timestep 0.001
+
+# Get Pt nanoparticle
+variable A0 equal 3.9239
+lattice fcc ${A0}
+region mybox block 0 5 0 5 0 5
+create_box 1 mybox
+
+# Using eam potential
+pair_style eam
+pair_coeff 1 1 Pt_u3.eam
+
+# Create atoms in the simulation box
+create_atoms 1 box
+
+# Set output frequency for thermodynamic properties
+thermo 1000
+
+# Define variables for thermodynamic properties
+variable N equal step
+variable pote equal pe
+variable Etotal equal etotal
+variable T equal temp
+variable Press equal press
+variable V equal vol
+
+# Compute potential energy, kinetic energy, and coordination number per atom
+compute 3 all pe/atom
+compute 4 all ke/atom
+compute 5 all coord/atom cutoff 3.0
+comm_modify cutoff 12
+
+# Generate initial velocities with a Gaussian distribution
+velocity all create 2.5 82577 dist gaussian
+
+# Compute and output radial distribution function (RDF)
+compute myRDF all rdf 200 cutoff 10
+fix myRDF all ave/time 100 5 1000 c_myRDF[*] file tmp.rdf mode vector
+
+# Relax the system at 2.5K using NVT ensemble
+fix 1 all nvt temp 2.5 2.5 0.2
+run 100000
+unfix 1
+
+# Relax the system at 1000K using NVT ensemble
+variable x equal 1000
+velocity all create $x 82577 dist gaussian
+fix 1 all nvt temp $x $x 0.2
+run 100000
+unfix 1
+
+# Output thermodynamic properties
+fix extra all print 100 "${N} ${T} ${V} ${pote} ${Etotal} ${Press}" file data
+
+# Output atomic coordinates and trajectory in different formats
+dump 1 all atom 1000 melt_Pt.atom
+dump 2 all dcd 1000 melt.dcd
+
+# Compute mean square displacement (MSD) and output the results
+compute myMSD all msd
+fix msd all ave/time 10 100 1000 c_myMSD[1] c_myMSD[2] &
+                    c_myMSD[3] c_myMSD[4] file msd.data
+dump_modify 2 unwrap yes
+
+# Heat the system from 1000K to 2200K using NPT ensemble
+fix 1 all npt temp $x 2200 0.2 iso 0 0 10
+run 1200000
