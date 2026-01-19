@@ -1,0 +1,15 @@
+ENCUT   = 400
+ISMEAR  = 0
+SIGMA   = 0.05
+EDIFF   = 1E-6
+NELMIN  = 3
+NELM    = 300
+LREAL   = Auto
+
+EDIFFG  = -0.02
+IBRION  = 2
+POTIM   = 0.2
+NSW     = 300 
+ISIF    = 2
+
+NPAR    = 2
