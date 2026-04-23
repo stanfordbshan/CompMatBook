@@ -1,0 +1,238 @@
+# ============================================================
+# Pd-Au nanocube: Pure MD (NVT) @ 900 K
+# Added: detailed surface statistics (corner / edge / face)
+# Debug-friendly:
+#   - dump random initial config
+#   - dump minimization trajectory
+#   - reset_timestep after minimization
+#   - production trajectory frame 0 is the true start (run 0)
+#   - (NO MC) no atom/swap
+# ============================================================
+
+clear
+units           metal
+atom_style      atomic
+boundary        f f f
+
+# ----------------------------
+# User knobs
+# ----------------------------
+variable        T           equal 900.0
+variable        dt          equal 0.001
+variable        tdamp       equal 0.1
+
+variable        nx          equal 7
+variable        pad         equal 12
+
+# (kept but unused in pure MD; harmless)
+variable        mc_every    equal 100
+variable        mc_attempt  equal 5
+variable        mc_seed     equal 123456
+
+variable        nsteps      equal 50000
+variable        thermoN     equal 500
+variable        dumpN       equal 500
+
+variable        a           equal 4.00
+variable        rcut        equal 3.60
+variable        nbins       equal 30
+variable        comp_seed   equal 202401
+
+# ----------------------------
+# Box + cube nanoparticle
+# ----------------------------
+lattice         fcc ${a}
+
+variable        Lbox        equal v_nx + 2.0*v_pad
+variable        blo         equal -0.5*v_Lbox
+variable        bhi         equal  0.5*v_Lbox
+
+region          simbox block $(v_blo) $(v_bhi) $(v_blo) $(v_bhi) $(v_blo) $(v_bhi) units lattice
+create_box      2 simbox
+
+variable        clo         equal -0.5*v_nx
+variable        chi         equal  0.5*v_nx
+region          cube block $(v_clo) $(v_chi) $(v_clo) $(v_chi) $(v_clo) $(v_chi) units lattice
+
+create_atoms    1 region cube
+group           NP region cube
+
+mass            1 106.42
+mass            2 196.97
+
+# ----------------------------
+# Random 1:1-ish composition
+# ----------------------------
+variable        Nat  equal count(NP)
+variable        NAu  equal floor(0.5*v_Nat)
+set             group NP type/subset 2 $(v_NAu) ${comp_seed}
+
+group           Pd type 1
+group           Au type 2
+print           "=== NP atoms = ${Nat}, NAu = ${NAu}, NPd = $(v_Nat-v_NAu) ==="
+
+# dump the true random initial config
+write_dump      NP custom init_random_cube.lammpstrj id type x y z
+
+# ----------------------------
+# Potential
+# ----------------------------
+pair_style      eam/alloy
+pair_coeff      * * CuAgAuNiPdPtAlPbFeMoTaWMgCoTiZr_Zhou04.eam.alloy Pd Au
+
+neighbor        2.0 bin
+neigh_modify    every 1 delay 0 check yes
+
+# ----------------------------
+# Minimization (dump it!)
+# ----------------------------
+reset_timestep  0
+dump            DMIN NP custom 1 minimize_traj.lammpstrj id type x y z
+dump_modify     DMIN sort id
+
+thermo          200
+thermo_style    custom step pe etotal
+
+min_style       cg
+minimize        1.0e-12 1.0e-12 5000 20000
+
+undump          DMIN
+
+# dump the minimized configuration (optional but useful)
+write_dump      NP custom after_minimize_cube.lammpstrj id type x y z
+
+# ----------------------------
+# IMPORTANT: start dynamics timeline cleanly from 0
+# ----------------------------
+reset_timestep  0
+
+# ----------------------------
+# MD NVT
+# ----------------------------
+timestep        ${dt}
+compute         TCOM NP temp/com
+
+velocity        NP create ${T} 998877 mom yes rot yes dist gaussian
+
+fix             NVT NP nvt temp ${T} ${T} ${tdamp}
+fix_modify      NVT temp TCOM
+
+fix             REC NP recenter 0.0 0.0 0.0 units box
+fix             MOM NP momentum 100 linear 1 1 1
+
+# ----------------------------
+# Metrics (surface -> corner/edge/face decomposition)
+#   Using CN from compute coord/atom with cutoff rcut (nearest neighbors)
+#   Typical fcc counts (ideal):
+#     bulk ~12, face ~8-9, edge ~5-6, corner ~3-4
+# ----------------------------
+compute         CNall NP coord/atom cutoff ${rcut}
+
+# --- surface flag (keep your original definition) ---
+variable        isSurf    atom (c_CNall < 10.0)
+
+# --- corner/edge/face flags (subsets of surface) ---
+# corner: very under-coordinated (≈3-4)
+variable        isCorner  atom (c_CNall < 4.5)
+# edge: intermediate (≈5-6)
+variable        isEdge    atom ((c_CNall >= 4.5) && (c_CNall < 6.5))
+# face: higher-coordinated surface atoms (≈7-9)
+variable        isFace    atom ((c_CNall >= 6.5) && (c_CNall < 10.0))
+
+# --- element flags ---
+variable        isAuAtom  atom (type == 2)
+
+# --- Au on each site type ---
+variable        isAuSurf    atom (v_isAuAtom * v_isSurf)
+variable        isAuCorner  atom (v_isAuAtom * v_isCorner)
+variable        isAuEdge    atom (v_isAuAtom * v_isEdge)
+variable        isAuFace    atom (v_isAuAtom * v_isFace)
+
+# --- counts ---
+compute         Nsurf     NP reduce sum v_isSurf
+compute         Ncorner   NP reduce sum v_isCorner
+compute         Nedge     NP reduce sum v_isEdge
+compute         Nface     NP reduce sum v_isFace
+
+compute         NAuSurf   NP reduce sum v_isAuSurf
+compute         NAuCorner NP reduce sum v_isAuCorner
+compute         NAuEdge   NP reduce sum v_isAuEdge
+compute         NAuFace   NP reduce sum v_isAuFace
+
+# --- Au fractions on each site type ---
+variable        xAuSurf    equal c_NAuSurf/(c_Nsurf+1.0e-12)
+variable        xAuCorner  equal c_NAuCorner/(c_Ncorner+1.0e-12)
+variable        xAuEdge    equal c_NAuEdge/(c_Nedge+1.0e-12)
+variable        xAuFace    equal c_NAuFace/(c_Nface+1.0e-12)
+
+# (sanity check) should be close to Nsurf
+variable        NsurfCEF   equal c_Ncorner + c_Nedge + c_Nface
+
+# --- your original chemical short-range order (unchanged) ---
+compute         CNPdTot Pd coord/atom cutoff ${rcut}
+compute         CNPdAu  Pd coord/atom cutoff ${rcut} 2
+compute         CNAuTot Au coord/atom cutoff ${rcut}
+compute         CNAuPd  Au coord/atom cutoff ${rcut} 1
+
+variable        selPdInt atom ((type==1) * (c_CNall>=10.0))
+variable        selAuInt atom ((type==2) * (c_CNall>=10.0))
+
+variable        PdTot_int  atom (c_CNPdTot * v_selPdInt)
+variable        PdAu_int   atom (c_CNPdAu  * v_selPdInt)
+variable        AuTot_int  atom (c_CNAuTot * v_selAuInt)
+variable        AuPd_int   atom (c_CNAuPd  * v_selAuInt)
+
+compute         sumPdTot NP reduce sum v_PdTot_int
+compute         sumPdAu  NP reduce sum v_PdAu_int
+compute         sumAuTot NP reduce sum v_AuTot_int
+compute         sumAuPd  NP reduce sum v_AuPd_int
+
+variable        xAu equal count(Au)/count(NP)
+variable        xPd equal 1.0 - v_xAu
+
+variable        pAuGivenPd equal c_sumPdAu/(c_sumPdTot+1.0e-12)
+variable        pPdGivenAu equal c_sumAuPd/(c_sumAuTot+1.0e-12)
+
+variable        alphaPd equal 1.0 - v_pAuGivenPd/(v_xAu+1.0e-12)
+variable        alphaAu equal 1.0 - v_pPdGivenAu/(v_xPd+1.0e-12)
+
+# --- structural order parameter ---
+compute         Q6 NP orientorder/atom degrees 1 6 nnn 12 cutoff ${rcut}
+compute         Q6ave NP reduce ave c_Q6[1]
+
+# --- radial Au fraction (unchanged) ---
+variable        H0   equal 0.5*v_nx*v_a
+variable        rmax equal 1.25*sqrt(3.0)*v_H0
+compute         rbins NP chunk/atom bin/sphere 0.0 0.0 0.0 0.0 $(v_rmax) ${nbins} units box discard yes
+fix             RAD NP ave/chunk ${dumpN} 1 ${dumpN} rbins v_isAuAtom file radial_AuFrac.dat
+
+# --- (new) time series stats for corner/edge/face ---
+# Columns:
+#   Ncorner Nedge Nface NsurfCEF  NAuCorner NAuEdge NAuFace  xAuCorner xAuEdge xAuFace
+fix             SITESTAT NP ave/time ${dumpN} 1 ${dumpN} c_Ncorner c_Nedge c_Nface v_NsurfCEF c_NAuCorner c_NAuEdge c_NAuFace v_xAuCorner v_xAuEdge v_xAuFace file siteType_stats.dat
+
+# ----------------------------
+# Thermo (no pressure output, no "lost settings" warning)
+# ----------------------------
+thermo          ${thermoN}
+thermo_style custom step temp pe etotal v_xAu &
+             c_Ncorner c_Nedge c_Nface v_NsurfCEF &
+             v_xAuCorner v_xAuEdge v_xAuFace v_xAuSurf &
+             v_alphaPd v_alphaAu c_Q6ave c_Nsurf
+thermo_modify   temp TCOM lost ignore flush yes
+
+# ----------------------------
+# Production dump: write frame 0 (true start)
+# ----------------------------
+dump            DMP NP custom ${dumpN} traj_PdAu_cube_900K.lammpstrj id type x y z c_CNall c_Q6[1] v_isCorner v_isEdge v_isFace
+dump_modify     DMP sort id
+
+# Write a true frame-0 snapshot into the main trajectory file
+run             0
+
+# ----------------------------
+# Run (PURE MD: no atom/swap)
+# ----------------------------
+run             ${nsteps}
+write_data      PdAu_cube_900K_final.data
+
