@@ -9,3 +9,6 @@ debug/
 # 忽略根目录下的 config.json 文件
 /config.json
 
+# 本地 Claude Code 指令文件，仅本地使用，不纳入版本控制
+/CLAUDE.md
+
