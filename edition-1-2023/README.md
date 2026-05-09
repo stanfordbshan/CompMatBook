@@ -6,9 +6,9 @@
 
 **华中科技大学出版社 &nbsp; 2023**
 
-<img src="https://github.com/stanfordbshan/CompMatBook/blob/main/cover.png?raw=true" width="280"/>
+<img src="https://github.com/stanfordbshan/CompMatBook/blob/main/edition-1-2023/cover.png?raw=true" width="280"/>
 
-[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](LICENSE)
+[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](../LICENSE)
 ![Language](https://img.shields.io/badge/Language-Python-3776AB?logo=python&logoColor=white)
 ![VASP](https://img.shields.io/badge/Software-VASP-green)
 ![LAMMPS](https://img.shields.io/badge/Software-LAMMPS-orange)
@@ -225,10 +225,10 @@
 
 ## 许可证
 
-本项目采用 [GPL-3.0](LICENSE) 许可证。
+本项目采用 [GPL-3.0](../LICENSE) 许可证。
 
 <div align="center">
 
-<img src="https://github.com/stanfordbshan/CompMatBook/blob/main/author.png?raw=true" width="500"/>
+<img src="https://github.com/stanfordbshan/CompMatBook/blob/main/edition-1-2023/author.png?raw=true" width="500"/>
 
 </div>
